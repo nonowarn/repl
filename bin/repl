@@ -86,8 +86,20 @@ if debug
   puts command.inspect
 end
 
+REPL_PROMPT = Hash.new { |hash, cmd| hash[cmd] = proc { "#{cmd}>> " } }
+REPL_PROMPT["hg"] = proc {
+  branch = `hg branch`.chomp
+  "hg[#{branch}]>> "
+}
+REPL_PROMPT["git"] = proc {
+  branch = `git branch --no-color | grep '^*'`.chomp[2..-1]
+  "git[#{branch}]>> "
+}
+
+prompt = REPL_PROMPT[ARGV[0]]
+
 loop do
-  print ENV['REPL_PROMPT'] || "#{ARGV[0]}>> "
+  print ENV['REPL_PROMPT'] || prompt.call
 
   begin
     line = $stdin.gets.chomp
